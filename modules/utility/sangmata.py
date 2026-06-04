@@ -1,96 +1,48 @@
-"""
-Module: sangmata
-Commands: .sangmata, .names, .usernames
-Fetch name/username history via @SangMata bot.
-"""
-
 import asyncio
-from pyrogram.types import Message
+from pyrogram import Client, filters
 from pyrogram.errors import YouBlockedUser
 
-import eleger
-from eleger import CMD_HANDLER
-from eleger.helpers.decorator import eleger_cmd
-from eleger.helpers.utils import edel, get_name
+@Client.on_message(filters.command(["sg", "sangmata"], prefixes=".") & filters.me)
+async def cek_sangmata(client, message):
+    # Mengambil ID target (dari Reply atau Username)
+    target = ""
+    if message.reply_to_message and message.reply_to_message.from_user:
+        target = message.reply_to_message.from_user.id
+    elif len(message.command) > 1:
+        target = message.command[1]
+    else:
+        return await message.edit_text("❌ **Gagal:** Silakan *reply* (balas) pesan target atau ketik `.sg @username`")
 
-MODULE = "sangmata"
-HELP = f"""
-**Plugin:** `{MODULE}`
+    msg = await message.edit_text("🔍 **Sedang melacak riwayat target di database SangMata...**")
+    bot_target = "SangMataInfo_bot"
 
-• `{CMD_HANDLER}sangmata` — Cek riwayat nama/username user (via @SangMata_BOT)
-• `{CMD_HANDLER}names` — Riwayat nama saja
-• `{CMD_HANDLER}usernames` — Riwayat username saja
-"""
-eleger.CMD_HELP[MODULE] = HELP
-
-_SANGMATA_BOT = "SangMata_BOT"
-
-
-async def _query_sangmata(client, user_id: int, query: str) -> str:
-    """Send a query to SangMata bot and return its reply."""
     try:
-        response = await client.ask(
-            _SANGMATA_BOT,
-            query,
-            timeout=15,
-        )
-        return response.text or "_(tidak ada balasan)_"
+        # Buka blokir bot jika tidak sengaja terblokir
+        try:
+            await client.unblock_user(bot_target)
+        except:
+            pass
+        
+        # Kirim ID target ke SangMata
+        await client.send_message(bot_target, f"{target}")
+        
+        # Tunggu 3 detik agar bot SangMata pusat selesai mengetik & membalas
+        await asyncio.sleep(3)
+        
+        # Mengambil 2 balasan terakhir dari bot SangMata
+        hasil = []
+        async for chat_bot in client.get_chat_history(bot_target, limit=2):
+            if chat_bot.text and not chat_bot.text.startswith("Kirimkan"):
+                hasil.append(chat_bot.text)
+                
+        if not hasil:
+            return await msg.edit_text("❌ **Tidak ada riwayat nama ditemukan.** (Target mungkin tidak pernah ganti nama, atau server pusat sedang lambat).")
+            
+        # Gabungkan dan tampilkan hasil
+        teks_hasil = "\n\n".join(hasil)
+        await msg.edit_text(f"**👁️ Hasil Pelacakan SangMata:**\n\n{teks_hasil}")
+        
     except YouBlockedUser:
-        return "❌ Kamu memblokir @SangMata_BOT. Buka blokir terlebih dahulu."
-    except asyncio.TimeoutError:
-        return "❌ @SangMata_BOT tidak merespons (timeout)."
+        await msg.edit_text(f"❌ **Gagal:** Tolong buka blokir `@SangMataInfo_bot` terlebih dahulu.")
     except Exception as e:
-        return f"❌ Error: `{e}`"
-
-
-@eleger_cmd(r"sangmata$")
-async def sangmata_cmd(client, message: Message):
-    """Get full name+username history from SangMata."""
-    reply = message.reply_to_message
-    if not reply or not reply.from_user:
-        return await edel(message, "⚠️ Reply ke pesan user yang ingin dicek.", 5)
-
-    target = reply.from_user
-    uid = target.id
-    await message.edit(f"`🔍 Mengambil riwayat dari SangMata untuk ID {uid}...`")
-
-    result = await _query_sangmata(client, uid, f"/search {uid}")
-    await message.edit(
-        f"📋 **SangMata — Riwayat `{get_name(target)}`**\n"
-        f"━━━━━━━━━━━━━━━━━\n"
-        f"{result[:3500]}"
-    )
-
-
-@eleger_cmd(r"names$")
-async def names_cmd(client, message: Message):
-    """Get name history from SangMata."""
-    reply = message.reply_to_message
-    if not reply or not reply.from_user:
-        return await edel(message, "⚠️ Reply ke pesan user.", 5)
-
-    uid = reply.from_user.id
-    await message.edit("`🔍 Mengambil riwayat nama...`")
-    result = await _query_sangmata(client, uid, f"/names {uid}")
-    await message.edit(
-        f"📋 **Riwayat Nama — ID `{uid}`**\n"
-        f"━━━━━━━━━━━━━━━━━\n"
-        f"{result[:3500]}"
-    )
-
-
-@eleger_cmd(r"usernames$")
-async def usernames_cmd(client, message: Message):
-    """Get username history from SangMata."""
-    reply = message.reply_to_message
-    if not reply or not reply.from_user:
-        return await edel(message, "⚠️ Reply ke pesan user.", 5)
-
-    uid = reply.from_user.id
-    await message.edit("`🔍 Mengambil riwayat username...`")
-    result = await _query_sangmata(client, uid, f"/usernames {uid}")
-    await message.edit(
-        f"📋 **Riwayat Username — ID `{uid}`**\n"
-        f"━━━━━━━━━━━━━━━━━\n"
-        f"{result[:3500]}"
-    )
+        await msg.edit_text(f"❌ **Terjadi Eror:** `{str(e)}`")
