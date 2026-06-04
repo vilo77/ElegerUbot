@@ -73,8 +73,8 @@ async def startup():
         )
         await eleger.ASSISTANT.start()
 
-        import eleger.assistant
-        eleger.assistant.init_assistant()
+        from eleger import assistant
+        assistant.init_assistant()
 
     # ── 4. Start all clients concurrently ────────────────────────────────
     LOGS.info("Starting clients...")
