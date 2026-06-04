@@ -73,8 +73,8 @@ async def startup():
         )
         await eleger.ASSISTANT.start()
 
-        import eleger.assistant
-        eleger.assistant.init_assistant()
+        from eleger import assistant
+        assistant.init_assistant()
 
     # ── 4. Start all clients concurrently ────────────────────────────────
     LOGS.info("Starting clients...")
@@ -85,18 +85,18 @@ async def startup():
 
     # ── 6. Log startup notification ───────────────────────────────────────
     total = len(eleger.CLIENTS)
-    me_list = "\n".join(
+    me_list = "\\n".join(
         f"  [{i}] {c._me.first_name} (`{c._me.id}`)"
         for i, c in enumerate(eleger.CLIENTS, 1)
     )
     startup_text = (
-        f"⚡ **{BOT_NAME} v{BOT_VERSION} started!**\n\n"
-        f"**Clients:** `{total}`\n"
-        f"{me_list}\n\n"
-        f"**Modules:** `{len(success)}`\n"
+        f"⚡ **{BOT_NAME} v{BOT_VERSION} started!**\\n\\n"
+        f"**Clients:** `{total}`\\n"
+        f"{me_list}\\n\\n"
+        f"**Modules:** `{len(success)}`\\n"
         f"**Prefix:** `{eleger.CMD_HANDLER}`"
     )
-    LOGS.info(f"\n{startup_text}")
+    LOGS.info(f"\\n{startup_text}")
 
     if LOG_CHAT:
         await send_log("System Logs", startup_text)
@@ -126,3 +126,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         pass
+
