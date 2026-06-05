@@ -68,7 +68,8 @@ async def gcast_cmd(client, message: Message):
                 skipped += 1
                 continue
             try:
-                await client.forward_messages(chat.id, message.chat.id, reply.id)
+                # KUNCI PERUBAHAN: Menggunakan fungsi copy() agar tidak ada tag forward
+                await reply.copy(chat.id)
                 sent += 1
                 await asyncio.sleep(1.5)
             except Exception:
