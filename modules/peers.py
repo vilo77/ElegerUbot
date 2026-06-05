@@ -1,20 +1,26 @@
-import asyncio
-from pyrogram import Client, filters
-import eleger
+"""
+Module: peers
+Commands: .updatepeers
+Update peer database to fix invalid peer id errors.
+"""
 
-# === LABEL IDENTITAS UNTUK MENU .HELP ===
+import asyncio
+from pyrogram.types import Message
+import eleger
+from eleger import CMD_HANDLER
+from eleger.helpers.decorator import eleger_cmd
+
 MODULE = "peers"
 HELP = f"""
 **Plugin:** `{MODULE}`
 
-• `.updatepeers` — Memperbarui database.........
+• `{CMD_HANDLER}updatepeers` — Memperbarui database memori bot.
 """
 eleger.CMD_HELP[MODULE] = HELP
-# ========================================
 
-@Client.on_message(filters.command(["updatepeers"], prefixes=".") & filters.me)
-async def update_peers_cache(client, message):
-    msg = await message.edit_text("🔄 **Memindai dan memperbarui database peers...**\n`Mohon tunggu sebentar, proses ini sangat penting...`")
+@eleger_cmd(r"updatepeers$", allow_sudo=False)
+async def update_peers_cache(client, message: Message):
+    status_msg = await message.edit("🔄 **Memindai dan memperbarui database peers...**\n`Mohon tunggu sebentar, proses ini sangat penting...`")
     
     berhasil = 0
     try:
@@ -22,6 +28,10 @@ async def update_peers_cache(client, message):
         async for dialog in client.get_dialogs():
             berhasil += 1
             
-        await msg.edit_text(f"✅ **Database Peers Diperbarui!**\n\nBerhasil merekam `{berhasil}` obrolan ke dalam memori bot.\n\n*Terminal Railway kamu sekarang sudah kebal dari eror merah!* 🚀")
+        await status_msg.edit(
+            f"✅ **Database Peers Diperbarui!**\n\n"
+            f"Berhasil merekam `{berhasil}` obrolan ke dalam memori bot.\n\n"
+            f"*Terminal Railway kamu sekarang sudah kebal dari eror merah!* 🚀"
+        )
     except Exception as e:
-        await msg.edit_text(f"❌ **Terjadi kesalahan:** `{str(e)}`")
+        await status_msg.edit(f"❌ **Terjadi kesalahan:** `{str(e)}`")
