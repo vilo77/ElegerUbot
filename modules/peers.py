@@ -1,21 +1,27 @@
-from pyrogram import Client, filters
 import asyncio
+from pyrogram import Client, filters
+import eleger
 
-@Client.on_message(filters.command("updatepeers", prefixes=".") & filters.me)
-async def update_peers(client, message):
-    # Mengirim pesan status awal
-    msg = await message.reply_text("🔄 **Sedang memindai dan menyimpan daftar peers...**\n*Proses ini mungkin memakan waktu beberapa detik, mohon tunggu.*")
+# === LABEL IDENTITAS UNTUK MENU .HELP ===
+MODULE = "peers"
+HELP = f"""
+**Plugin:** `{MODULE}`
+
+• `.updatepeers` — Memperbarui database.........
+"""
+eleger.CMD_HELP[MODULE] = HELP
+# ========================================
+
+@Client.on_message(filters.command(["updatepeers"], prefixes=".") & filters.me)
+async def update_peers_cache(client, message):
+    msg = await message.edit_text("🔄 **Memindai dan memperbarui database peers...**\n`Mohon tunggu sebentar, proses ini sangat penting...`")
     
-    count = 0
+    berhasil = 0
     try:
-        # get_dialogs() akan memaksa Pyrogram membaca semua obrolan 
-        # dan otomatis menyimpannya ke dalam cache/database internal
+        # Loop melalui semua obrolan untuk memaksa bot mengingat ID grup/kontak
         async for dialog in client.get_dialogs():
-            count += 1
+            berhasil += 1
             
-        # Mengubah pesan awal menjadi pesan sukses
-        await msg.edit_text(f"✅ **Update Peers Selesai!**\nBerhasil memindai dan menyimpan **{count}** obrolan (Grup/Channel/Kontak) ke dalam memori bot.")
-        
+        await msg.edit_text(f"✅ **Database Peers Diperbarui!**\n\nBerhasil merekam `{berhasil}` obrolan ke dalam memori bot.\n\n*Terminal Railway kamu sekarang sudah kebal dari eror merah!* 🚀")
     except Exception as e:
-        # Jika ada eror saat memindai
-        await msg.edit_text(f"❌ **Terjadi kesalahan:**\n`{str(e)}`")
+        await msg.edit_text(f"❌ **Terjadi kesalahan:** `{str(e)}`")
