@@ -5,11 +5,12 @@ import eleger
 from eleger import CMD_HANDLER
 from eleger.helpers.decorator import eleger_cmd
 
-# Database sederhana
+# --- KONFIGURASI ---
 ALLOWED_USERS = set()
 ADMIN_ID = 603427690 
-GEN_STATE = {} # Format: {user_id: {"client": ..., "phone": ..., "hash": ...}}
+GEN_STATE = {}
 
+# --- LABEL IDENTITAS UNTUK MENU .HELP ---
 MODULE = "string_gen"
 HELP = f"""
 **Plugin:** `{MODULE}`
@@ -19,6 +20,8 @@ HELP = f"""
 • `/otp [kode]` — (Via Assistant Bot) Input OTP (Wajib spasi).
 • `/pw [password]` — (Via Assistant Bot) Input password 2FA.
 """
+
+# Daftarkan ke sistem help ElegerUbot
 eleger.CMD_HELP[MODULE] = HELP
 
 # --- 1. FITUR IZIN AKSES (Via Userbot) ---
@@ -52,9 +55,9 @@ async def assistant_gen(client, message):
         if len(message.command) < 2: return await message.reply("❌ Format: `/gen +628xxx`")
         phone = message.command[1]
         
-        # Bersihkan sesi lama jika ada
         if user_id in GEN_STATE:
-            await GEN_STATE[user_id]["client"].disconnect()
+            try: await GEN_STATE[user_id]["client"].disconnect()
+            except: pass
             
         temp_client = Client(f"gen_{user_id}", api_id=api_id, api_hash=api_hash, in_memory=True)
         await temp_client.connect()
@@ -69,6 +72,8 @@ async def assistant_gen(client, message):
     # PROSES OTP
     elif cmd == "otp":
         if user_id not in GEN_STATE: return await message.reply("Gunakan `/gen` dulu.")
+        if len(message.command) < 2: return await message.reply("❌ Masukkan OTP. Contoh: `/otp 1 2 3 4 5`")
+        
         code = message.command[1].replace(" ", "")
         state = GEN_STATE[user_id]
         try:
