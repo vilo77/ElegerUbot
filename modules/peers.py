@@ -31,7 +31,7 @@ async def update_peers_cache(client, message: Message):
         await status_msg.edit(
             f"✅ **Database Peers Diperbarui!**\n\n"
             f"Berhasil merekam `{berhasil}` obrolan ke dalam memori bot.\n\n"
-            f"*Terminal Railway kamu sekarang sudah kebal dari eror merah!* 🚀"
+            f"Peers Succesfully🚀"
         )
     except Exception as e:
         await status_msg.edit(f"❌ **Terjadi kesalahan:** `{str(e)}`")
